@@ -12,9 +12,9 @@
         </ul>
     @endif
     
-    <div class="row col-xs-12 col-offset-2 col-sm-8 col-offset-2 col-md-8 col-offset-3 col-md-6">
-        
-    </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6">
+        -
             {!! Form::model($tasklist, ['route' => ['tasklists.update', $tasklist->id], 'method' => 'put']) !!}
                 <div class="form-group">
                     {!! Form::label('status', 'ステータス:') !!}
