@@ -2,9 +2,8 @@
 
 @section('content')
     @if (Auth::check())
-        <div class="row">
-            <aside class="col-md-4">
-            </aside>
+       <?php $user = Auth::user(); ?>
+       {{$user->name}}
             <div class="col-xs-8">
                 @if (count($tasklists) > 0)
                     @include('tasklists.tasklists', ['tasklists' => $tasklists])

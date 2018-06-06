@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 // use App\Http\Controllers\Controller;
+use App\Tasklist;
 
 class TasklistsController extends Controller
 {
@@ -23,52 +24,62 @@ class TasklistsController extends Controller
             $data = [
                 'user' => $user,
                 'tasklists' => $tasklists,
+               
             ];
             $data += $this->counts($user);
-            return view('users.show', $data);
+            return view('tasklists.index', $data);
         }else {
             return view('welcome');
         }
     }
+    
+    public function create()
+    {
+        $tasklist = new Tasklist;
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+        return view('tasklists.create', [
+            'tasklist' => $tasklist,
+         ]);
+    }
+
     
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'status' => 'required|max:10',   // add
-            'content' => 'required|max:191',
-        ]);
-        
-        $tasklist = new tasklist;
-        $tasklist->status = $request->status;
-        $tasklist->content = $request->content;
-        $tasklist->save();
-        
-        $request->user()->tasklists()->create([
-            'content' => $request->content,
+         $this->validate($request, [
+            'content' => 'required|max:191',   // add
+            'status' => 'required|max:191',
+           
+            
         ]);
 
+        $tasklist = new Tasklist;
+        $user = \Auth::user();
+        $tasklist->user_id = $user->id;
+        $tasklist->content = $request->content;    // add
+        $tasklist->status = $request->status;
+        $tasklist->save();
+        //return "hello";
         return redirect('/');
     }
-
     /**
      * Display the specified resource.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+     
     public function show($id)
     {
-         $tasklist = tasklist::find($id);
-
+    $user = \Auth::user();
+    $tasklists = Tasklist::where([['user_id', '=', $user->id],
+                          ['id', '=', $id]]);
+    if($tasklists->exists()) {
         return view('tasklists.show', [
-            'tasklist' => $tasklist,
+            'tasklist' => $tasklists->first(),
         ]);
+    } else {
+        return redirect('/');
+    }
     }
 
     /**
@@ -108,14 +119,7 @@ class TasklistsController extends Controller
         return redirect('/');
     }
     
-    public function create()
-    {
-        $tasklist = new tasklist;
 
-        return view('tasklists.create', [
-            'tasklist' => $tasklist,
-         ]);
-    }
 
     /**
      * Store a newly created resource in storage.
