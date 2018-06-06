@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests;
-use App\tasklist;
+
+// use App\Http\Controllers\Controller;
 
 class TasklistsController extends Controller
 {
@@ -15,11 +15,20 @@ class TasklistsController extends Controller
      */
     public function index()
     {
-         $tasklists = tasklist::all();
+         $data = [];
+        if (\Auth::check()) {
+            $user = \Auth::user();
+            $tasklists = $user->tasklists()->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('tasklists.index', [
-            'tasklists' => $tasklists,
-        ]);
+            $data = [
+                'user' => $user,
+                'tasklists' => $tasklists,
+            ];
+            $data += $this->counts($user);
+            return view('users.show', $data);
+        }else {
+            return view('welcome');
+        }
     }
 
     /**
@@ -27,21 +36,7 @@ class TasklistsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        $tasklist = new tasklist;
-
-        return view('tasklists.create', [
-            'tasklist' => $tasklist,
-         ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    
     public function store(Request $request)
     {
         $this->validate($request, [
@@ -53,6 +48,10 @@ class TasklistsController extends Controller
         $tasklist->status = $request->status;
         $tasklist->content = $request->content;
         $tasklist->save();
+        
+        $request->user()->tasklists()->create([
+            'content' => $request->content,
+        ]);
 
         return redirect('/');
     }
@@ -108,6 +107,22 @@ class TasklistsController extends Controller
 
         return redirect('/');
     }
+    
+    public function create()
+    {
+        $tasklist = new tasklist;
+
+        return view('tasklists.create', [
+            'tasklist' => $tasklist,
+         ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
 
     /**
      * Remove the specified resource from storage.
@@ -121,5 +136,13 @@ class TasklistsController extends Controller
         $tasklist->delete();
         
         return redirect('/');
+        
+        $tasklist = \App\tasklist::find($id);
+
+        if (\Auth::user()->id === $tasklist->user_id) {
+            $tasklist->delete();
+        }
+
+        return redirect()->back();
     }
 }
