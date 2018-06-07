@@ -47,7 +47,7 @@ class TasklistsController extends Controller
     {
          $this->validate($request, [
             'content' => 'required|max:191',   // add
-            'status' => 'required|max:191',
+            'status' => 'required|max:10',
            
             
         ]);
@@ -90,11 +90,16 @@ class TasklistsController extends Controller
      */
     public function edit($id)
     {
-         $tasklist = tasklist::find($id);
-
+         $user = \Auth::user();
+    $tasklists = Tasklist::where([['user_id', '=', $user->id],
+                          ['id', '=', $id]]);
+    if($tasklists->exists()) {
         return view('tasklists.edit', [
-            'tasklist' => $tasklist,
+            'tasklist' => $tasklists->first(),
         ]);
+    } else {
+        return redirect('/');
+    }
     }
 
     /**
@@ -104,21 +109,24 @@ class TasklistsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+  
+    
     public function update(Request $request, $id)
-    {
-        $this->validate($request, [
-            'status' => 'required|max:10', 
-            'content' => 'required|max:191',
+    
+    {$this->validate($request, [
+            'content' => 'required|max:191',   // add
+            'status' => 'required|max:10',
+            
         ]);
 
-        $tasklist = tasklist::find($id);
+        $tasklist = Tasklist::find($id);
+        $tasklist->content = $request->content;    // add
         $tasklist->status = $request->status;
-        $tasklist->content = $request->content;
         $tasklist->save();
-
+        
         return redirect('/');
+        
     }
-    
 
 
     /**
